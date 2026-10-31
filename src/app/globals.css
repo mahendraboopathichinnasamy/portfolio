@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050B14;
+  --foreground: #F8FAFC;
+  --cyber-bg: #050B14;
+  --cyber-cyan: #00E5FF;
+  --cyber-cyan-bright: #22D3EE;
+  --cyber-teal: #00B4D8;
+  --cyber-card: rgba(8, 24, 38, 0.7);
+  --cyber-card-border: rgba(0, 229, 255, 0.18);
+  --cyber-muted: #CBD5E1;
+  --cyber-glow: 0 0 25px rgba(0, 229, 255, 0.25);
+}
+
+@theme {
+  --color-cyber-dark: #050B14;
+  --color-cyber-deep: #03070E;
+  --color-cyber-cyan: #00E5FF;
+  --color-cyber-cyan-bright: #22D3EE;
+  --color-cyber-teal: #00B4D8;
+  --color-cyber-muted: #CBD5E1;
+  --color-cyber-border: rgba(0, 229, 255, 0.18);
+  --color-cyber-card: rgba(8, 24, 38, 0.7);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: #050B14;
+  color: #F8FAFC;
+}
+
+body {
+  background-color: #050B14;
+  color: #F8FAFC;
+  overflow-x: hidden;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+/* Background Cyber Grid */
+.cyber-grid {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+}
+
+.cyber-radial-overlay {
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.15) 0%, transparent 60%),
+    radial-gradient(circle at 90% 25%, rgba(34, 211, 238, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 10% 70%, rgba(0, 180, 216, 0.09) 0%, transparent 50%),
+    radial-gradient(circle at 80% 85%, rgba(0, 229, 255, 0.1) 0%, transparent 45%);
+}
+
+/* Glassmorphism Styles */
+.glass-pill {
+  background: rgba(8, 24, 38, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 15px rgba(0, 229, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(8, 24, 38, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 229, 255, 0.16);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 229, 255, 0.25);
+}
+
+/* Glowing text and buttons */
+.glow-text-cyan {
+  text-shadow: 0 0 18px rgba(0, 229, 255, 0.55), 0 0 35px rgba(0, 229, 255, 0.3);
+}
+
+.glow-btn-cyan {
+  background: linear-gradient(135deg, #00E5FF 0%, #00B4D8 100%);
+  color: #03070E;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), 0 4px 15px rgba(0, 0, 0, 0.5);
+  transition: all 0.25s ease;
+}
+
+.glow-btn-cyan:hover {
+  background: linear-gradient(135deg, #22D3EE 0%, #00E5FF 100%);
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.7), 0 6px 20px rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
+}
+
+.glow-btn-outline {
+  background: rgba(8, 24, 38, 0.5);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  color: #00E5FF;
+  transition: all 0.25s ease;
+}
+
+.glow-btn-outline:hover {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: #00E5FF;
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.35);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+/* Accessible Minimum 44px Touch Target */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Custom Cyan Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050B14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.6);
+}
+
+/* Cursor Blink Animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s infinite;
+}
+
+/* Respect prefers-reduced-motion for WCAG AA Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
