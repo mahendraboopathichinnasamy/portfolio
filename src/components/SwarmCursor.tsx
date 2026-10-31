@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import './SwarmCursor.css';
 
-const MAX_PARTICLES = 1800;
+const MAX_PARTICLES = 2000;
 const INTRO_SECONDS = 1.4;
 const HIDDEN = 'swarm-cursor-hidden';
 const SHAPES: Record<string, number> = { dot: 0, square: 1, streak: 2 };
@@ -203,6 +203,8 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wakeRef = useRef<(() => void) | null>(null);
+  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const ink = lightMode ? '#18181b' : '#00E5FF';
   const accentInk = lightMode ? '#0284c7' : '#22D3EE';
 
@@ -295,6 +297,10 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
     };
 
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const isMobileDevice =
+      typeof window !== 'undefined' &&
+      (window.innerWidth < 768 || 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
+
     const view = { width: 1, height: 1, ratio: 1 };
     const px = new Float32Array(MAX_PARTICLES);
     const py = new Float32Array(MAX_PARTICLES);
@@ -335,6 +341,18 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
     let seeded = false;
     let hidden = false;
     let sorted = 0;
+
+    // Responsive mobile particle tuning
+    const getEffectiveSettings = () => {
+      const s = settingsRef.current;
+      const mobile = view.width < 768 || isMobileDevice;
+      return {
+        ...s,
+        count: mobile ? Math.min(s.count, 380) : s.count,
+        spread: mobile ? Math.min(s.spread, 65) : s.spread,
+        size: mobile ? Math.max(s.size * 0.95, 2.2) : s.size,
+      };
+    };
 
     const setHidden = (value: boolean) => {
       if (value === hidden) return;
@@ -395,7 +413,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
       values[rows * cols - 1] = 0.5 * (values[rows * cols - 2] + values[(rows - 1) * cols - 1]);
     };
 
-    const stir = (s: typeof settings, dt: number, ease: number) => {
+    const stir = (s: ReturnType<typeof getEffectiveSettings>, dt: number, ease: number) => {
       const radius = s.spread;
       const reach = radius * 2.2;
       const i0 = Math.max(1, Math.floor((anchor.x - reach) / cell));
@@ -457,7 +475,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
       }
     };
 
-    const flow = (s: typeof settings, dt: number) => {
+    const flow = (s: ReturnType<typeof getEffectiveSettings>, dt: number) => {
       const total = cols * rows;
       for (let j = 1; j < rows - 1; j++) {
         for (let i = 1; i < cols - 1; i++) {
@@ -555,7 +573,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
       return gc;
     };
 
-    const move = (s: typeof settings, dt: number, ease: number) => {
+    const move = (s: ReturnType<typeof getEffectiveSettings>, dt: number, ease: number) => {
       const n = s.count;
       const radius = s.spread;
       const loose = 1 - 0.6 * s.tail;
@@ -639,7 +657,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
     };
 
     const place = (gathered: boolean) => {
-      const s = settingsRef.current;
+      const s = getEffectiveSettings();
       const rand = random(11);
       const reachOut = Math.hypot(view.width, view.height) * 0.5;
       for (let i = 0; i < MAX_PARTICLES; i++) {
@@ -655,7 +673,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
     };
 
     const findTarget = (): Element | null => {
-      const s = settingsRef.current;
+      const s = getEffectiveSettings();
       if (!s.targets || !pointer.inside) return null;
       const rect = container.getBoundingClientRect();
       const element = document.elementFromPoint(rect.left + pointer.x, rect.top + pointer.y);
@@ -671,7 +689,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
       return match;
     };
 
-    const updateAnchor = (s: typeof settings, dt: number) => {
+    const updateAnchor = (s: ReturnType<typeof getEffectiveSettings>, dt: number) => {
       const w = view.width;
       const h = view.height;
       if (hovered && hovered.isConnected) {
@@ -719,7 +737,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
 
     const draw = () => {
       if (!gl || gl.isContextLost()) return;
-      const s = settingsRef.current;
+      const s = getEffectiveSettings();
       const n = s.count;
       const fade = introClock * introClock * (3 - 2 * introClock) * presence;
       const zr = Math.max(s.spread * 0.55, 10);
@@ -811,7 +829,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
 
     const resize = () => {
       if (!gl || gl.isContextLost()) return;
-      const s = settingsRef.current;
+      const s = getEffectiveSettings();
       view.width = Math.max(1, container.clientWidth);
       view.height = Math.max(1, container.clientHeight);
       view.ratio = Math.min(s.dpr || window.devicePixelRatio || 1, 2);
@@ -836,7 +854,7 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
     const frame = (now: number) => {
       raf = 0;
       if (!visible || document.hidden || !gl || gl.isContextLost()) return;
-      const s = settingsRef.current;
+      const s = getEffectiveSettings();
       const dt = last ? clamp((now - last) / 1000, 0.001, 1 / 30) : 1 / 60;
       last = now;
       if (!s.enabled || reduce) {
@@ -866,26 +884,16 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
       }
     }
 
-    const locate = (event: PointerEvent) => {
+    const locateCoords = (clientX: number, clientY: number) => {
       const rect = container.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
       return { x, y, inside: x >= 0 && y >= 0 && x <= rect.width && y <= rect.height };
     };
 
-    const onPointerMove = (event: PointerEvent) => {
-      const { x, y, inside } = locate(event);
-      pointer.x = x;
-      pointer.y = y;
-      pointer.inside = inside;
-      wake();
-    };
-
-    const onPointerDown = (event: PointerEvent) => {
-      wake();
-      const s = settingsRef.current;
-      const { x, y, inside } = locate(event);
-      if (!inside || !s.enabled || reduce || s.clickEffect === 'none') return;
+    const triggerClickBurst = (x: number, y: number) => {
+      const s = getEffectiveSettings();
+      if (!s.enabled || reduce || s.clickEffect === 'none') return;
       const reachOut = s.spread * 2.2;
       if (s.clickEffect === 'pulse') {
         ping.x = x;
@@ -922,12 +930,71 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
       }
     };
 
+    // Desktop Pointer Listeners
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return; // Handled by touch events for smooth mobile gesture support
+      const { x, y, inside } = locateCoords(event.clientX, event.clientY);
+      pointer.x = x;
+      pointer.y = y;
+      pointer.inside = inside;
+      wake();
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return;
+      wake();
+      const { x, y, inside } = locateCoords(event.clientX, event.clientY);
+      if (!inside) return;
+      triggerClickBurst(x, y);
+    };
+
     const onPointerUp = (event: PointerEvent) => {
-      if (event.pointerType !== 'mouse') pointer.inside = false;
+      if (event.pointerType === 'mouse') return;
+      // On touch pointerup, allow a gentle 1.8s linger before returning to idle
+      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+      touchTimeoutRef.current = setTimeout(() => {
+        pointer.inside = false;
+      }, 1800);
     };
 
     const onPointerLeave = () => {
       pointer.inside = false;
+    };
+
+    // Mobile / Tablet Dedicated Touch Listeners
+    const onTouchStart = (event: TouchEvent) => {
+      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+      if (event.touches && event.touches.length > 0) {
+        const touch = event.touches[0];
+        const { x, y, inside } = locateCoords(touch.clientX, touch.clientY);
+        pointer.x = x;
+        pointer.y = y;
+        pointer.inside = inside;
+        wake();
+        if (inside) {
+          triggerClickBurst(x, y);
+        }
+      }
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+      if (event.touches && event.touches.length > 0) {
+        const touch = event.touches[0];
+        const { x, y, inside } = locateCoords(touch.clientX, touch.clientY);
+        pointer.x = x;
+        pointer.y = y;
+        pointer.inside = inside;
+        wake();
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+      // Keep swarm hovering at the finger's last touch position for 1.8s before resuming idle roam
+      touchTimeoutRef.current = setTimeout(() => {
+        pointer.inside = false;
+      }, 1800);
     };
 
     const onVisibility = () => {
@@ -947,11 +1014,19 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
     });
     intersection.observe(container);
 
+    // Register Pointer Listeners
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerdown', onPointerDown, { passive: true });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
     window.addEventListener('pointercancel', onPointerUp, { passive: true });
     document.documentElement.addEventListener('pointerleave', onPointerLeave);
+
+    // Register Mobile Touch Listeners
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
     document.addEventListener('visibilitychange', onVisibility);
 
     resize();
@@ -959,15 +1034,23 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
 
     return () => {
       if (raf) cancelAnimationFrame(raf);
+      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
       wakeRef.current = null;
       setHidden(false);
       resizeObserver.disconnect();
       intersection.disconnect();
+
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerUp);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
+
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchcancel', onTouchEnd);
+
       document.removeEventListener('visibilitychange', onVisibility);
 
       if (gl && !gl.isContextLost()) {
@@ -978,8 +1061,6 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
         gl.deleteVertexArray(vao);
         gl.deleteProgram(shader.program);
       }
-      // Note: NEVER call loseContext() here because in React 18/19 StrictMode / Fast Refresh,
-      // calling loseContext() permanently kills the canvas WebGL context across re-mounts!
     };
   }, []);
 

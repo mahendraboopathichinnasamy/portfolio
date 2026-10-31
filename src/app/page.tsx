@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <div className="relative min-h-screen bg-[#050B14] text-slate-100 overflow-x-hidden selection:bg-[#00E5FF]/20 selection:text-[#00E5FF]">
       {/* Full-Page Interactive Swarm Cursor Particle System */}
-      <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden">
+      <div className="fixed inset-0 w-full h-full min-h-[100dvh] pointer-events-none z-30 overflow-hidden">
         <SwarmCursor
           count={800}
           size={2.6}
