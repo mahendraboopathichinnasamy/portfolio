@@ -7,8 +7,6 @@ import {
   MapPin,
   Copy,
   Check,
-  MessageSquare,
-  ArrowUpRight,
 } from 'lucide-react';
 import { profileData } from '@/config/portfolioData';
 
@@ -127,30 +125,6 @@ export default function ContactSection({ onOpenContactModal }: ContactSectionPro
           </div>
         </div>
       </div>
-
-      {/* Direct Message Dialog Launcher Banner */}
-      {onOpenContactModal && (
-        <div className="glass-card p-6 md:p-7 rounded-2xl border border-[#00E5FF]/25 flex flex-col sm:flex-row items-center justify-between gap-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)] bg-gradient-to-r from-[#081826]/90 via-[#050B14]/90 to-[#081826]/90">
-          <div className="flex items-center gap-3.5 text-center sm:text-left">
-            <div className="w-11 h-11 rounded-2xl bg-[#00E5FF]/10 border border-[#00E5FF]/30 flex items-center justify-center text-[#00E5FF] shrink-0 shadow-[0_0_15px_rgba(0,229,255,0.25)]">
-              <MessageSquare className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-white">Prefer to Send a Direct Note?</h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Open the direct messaging dialog to transmit your project requirements or hiring inquiry.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onOpenContactModal}
-            className="glow-btn-cyan px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shrink-0 cursor-pointer shadow-[0_0_20px_rgba(0,229,255,0.35)] min-h-[44px]"
-          >
-            <span>Send Direct Message</span>
-            <ArrowUpRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
     </section>
   );
 }

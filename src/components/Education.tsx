@@ -141,7 +141,7 @@ export default function Education() {
           <Languages className="w-4 h-4" />
         </div>
         <div>
-          <h4 className="text-sm font-bold text-white mb-2">Languages Spoken</h4>
+          <h4 className="text-sm font-bold text-white mb-2">Languages Known </h4>
           <div className="flex flex-wrap gap-2">
             {interestsAndLanguages.languages.map((lang) => (
               <div
@@ -149,7 +149,9 @@ export default function Education() {
                 className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/10 text-xs text-slate-200"
               >
                 <span className="font-semibold text-white">{lang.name}</span>
-                <span className="text-[11px] text-slate-400 ml-1.5">({lang.proficiency})</span>
+                {'proficiency' in lang && (lang as { name: string; proficiency?: string }).proficiency && (
+                  <span className="text-[11px] text-slate-400 ml-1.5">({(lang as { name: string; proficiency?: string }).proficiency})</span>
+                )}
               </div>
             ))}
           </div>

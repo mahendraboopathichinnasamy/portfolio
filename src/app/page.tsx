@@ -11,7 +11,7 @@ import ContactSection from '@/components/ContactSection';
 import Footer from '@/components/Footer';
 import ResumeModal from '@/components/ResumeModal';
 import ContactModal from '@/components/ContactModal';
-import CursorSpotlight from '@/components/CursorSpotlight';
+import SwarmCursor from '@/components/SwarmCursor';
 import FloatingScrollController from '@/components/FloatingScrollController';
 
 export default function Home() {
@@ -24,8 +24,19 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen bg-[#050B14] text-slate-100 overflow-x-hidden selection:bg-[#00E5FF]/20 selection:text-[#00E5FF]">
-      {/* Interactive mouse-following cyber ambient spotlight */}
-      <CursorSpotlight />
+      {/* Full-Page Interactive Swarm Cursor Particle System */}
+      <div className="fixed inset-0 pointer-events-none z-30 overflow-hidden">
+        <SwarmCursor
+          count={800}
+          size={2.6}
+          spread={90}
+          swirl={0.6}
+          clickEffect="burst"
+          color="#00E5FF"
+          accentColor="#22D3EE"
+          className="w-full h-full"
+        />
+      </div>
 
       {/* Skip to Main Content Link for Keyboard Accessibility (WCAG AA) */}
       <a

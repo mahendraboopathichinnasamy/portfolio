@@ -356,8 +356,8 @@ export const certificationsData: CertificationItem[] = [
 
 export const interestsAndLanguages = {
   languages: [
-    { name: 'Tamil', proficiency: 'Native / Bilingual' },
-    { name: 'English', proficiency: 'Professional Working Proficiency' },
+    { name: 'Tamil' },
+    { name: 'English' },
   ],
   interests: [
     'Cross-Platform Mobile App Engineering (Flutter & Ionic)',

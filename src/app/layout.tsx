@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Geist } from 'next/font/google';
 import './globals.css';
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({
   subsets: ['latin'],
@@ -47,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} dark scroll-smooth`}>
+    <html lang="en" className={cn("dark", "scroll-smooth", inter.variable, "font-sans", geist.variable)}>
       <head>
         <meta name="theme-color" content="#050B14" />
         <link rel="icon" href="/icon.png" type="image/png" />

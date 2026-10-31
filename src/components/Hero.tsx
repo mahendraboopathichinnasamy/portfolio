@@ -128,6 +128,7 @@ export default function Hero({ onOpenResume }: HeroProps) {
           {/* Right Column: Enlarged Portrait Image placed cleanly on the Right Side (5 columns) */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end items-center relative">
             <motion.div
+              data-swarm-target
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
