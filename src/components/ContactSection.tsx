@@ -36,9 +36,6 @@ export default function ContactSection({ onOpenContactModal }: ContactSectionPro
             Conversation
           </span>
         </h2>
-        <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-xl">
-          Interested in discussing an engineering role, collaborative project, or mobile application? Reach out directly.
-        </p>
       </div>
 
       {/* Contact Cards in 3 Columns */}

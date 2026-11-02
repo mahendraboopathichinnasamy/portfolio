@@ -355,9 +355,6 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
               Projects
             </span>
           </h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-xl">
-            Featured mobile and full-stack applications engineering cross-platform responsiveness and clean architectures.
-          </p>
         </div>
 
         {/* Clean Controls: Subtle Prev/Next arrows & All Projects Badge */}

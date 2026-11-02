@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { ArrowUpRight, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -130,19 +129,12 @@ export default function Navbar({ onOpenContact }: NavbarProps) {
         <a
           href="#home"
           onClick={(e) => scrollToSection(e, '#home')}
-          className="flex items-center group focus:outline-none focus:ring-2 focus:ring-[#00E5FF] rounded-2xl min-h-[44px] min-w-[44px]"
+          className="relative w-10 h-10 rounded-full border border-[#00E5FF]/40 bg-gradient-to-br from-[#081826] via-[#050B14] to-[#03070E] flex items-center justify-center hover:scale-105 active:scale-95 hover:border-[#00E5FF] transition-all duration-300 shadow-[0_0_16px_rgba(0,229,255,0.25)] hover:shadow-[0_0_24px_rgba(0,229,255,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B14] select-none"
           aria-label="Mahendra Boopathi Portfolio Home"
         >
-          <div className="w-10 h-10 rounded-2xl overflow-hidden border border-[#00E5FF]/40 flex items-center justify-center group-hover:scale-105 group-hover:border-[#00E5FF] transition-all duration-300 shadow-[0_0_16px_rgba(0,229,255,0.25)] group-hover:shadow-[0_0_24px_rgba(0,229,255,0.5)] bg-[#03070E]">
-            <Image
-              src="/images/mb_icon_transparent.png"
-              alt="mb. logo"
-              width={40}
-              height={40}
-              className="w-full h-full object-cover"
-              priority
-            />
-          </div>
+          <span className="font-black text-sm tracking-tight text-white select-none pl-0.5 leading-none">
+            MB<span className="text-[#00E5FF] drop-shadow-[0_0_8px_#00E5FF]">.</span>
+          </span>
         </a>
 
         {/* Desktop Navigation Links with Animated Active Underline & Highlighted Let's Talk */}
@@ -239,16 +231,14 @@ export default function Navbar({ onOpenContact }: NavbarProps) {
                 {/* Drawer Header */}
                 <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl overflow-hidden border border-[#00E5FF]/40 shadow-[0_0_12px_rgba(0,229,255,0.3)] bg-[#03070E]">
-                      <Image
-                        src="/images/mb-3d-glass.png"
-                        alt="mb. logo"
-                        width={32}
-                        height={32}
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="w-8 h-8 rounded-full border border-[#00E5FF]/40 flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.3)] bg-gradient-to-br from-[#081826] via-[#050B14] to-[#03070E]">
+                      <span className="font-black text-xs tracking-tight text-white select-none pl-0.5 leading-none">
+                        MB<span className="text-[#00E5FF] drop-shadow-[0_0_6px_#00E5FF]">.</span>
+                      </span>
                     </div>
-                    <span className="text-sm font-bold text-white tracking-wider">mb.</span>
+                    <span className="text-sm font-bold text-white tracking-wider">
+                      Mahendra Boopathi
+                    </span>
                   </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}

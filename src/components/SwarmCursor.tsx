@@ -585,6 +585,24 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
       const gap = radius * Math.sqrt(Math.PI / Math.max(n, 1)) * 1.6;
       const repel = 4000;
       const gc = push(n, gap);
+
+      // Character / Pet Exclusion Zone: Prevents swarm particles from passing over companion
+      let avoidCx = -9999;
+      let avoidCy = -9999;
+      let avoidRx = 1;
+      let avoidRy = 1;
+      let hasAvoid = false;
+      const petEl = document.querySelector('.pet-canvas-wrap, .pet-character-wrap');
+      if (petEl) {
+        const b = petEl.getBoundingClientRect();
+        const cFrame = container.getBoundingClientRect();
+        avoidCx = b.left - cFrame.left + b.width / 2;
+        avoidCy = b.top - cFrame.top + b.height / 2;
+        avoidRx = b.width * 0.95;
+        avoidRy = b.height * 0.65;
+        hasAvoid = true;
+      }
+
       for (let i = 0; i < n; i++) {
         const x = px[i];
         const y = py[i];
@@ -626,6 +644,20 @@ const SwarmCursor: React.FC<SwarmCursorProps> = ({
           ax += (dx / d) * (d * gather + over * pull);
           ay += (dy / d) * (d * gather + over * pull);
         }
+
+        // Repel particle if it enters the companion exclusion zone
+        if (hasAvoid) {
+          const dxA = (x - avoidCx) / avoidRx;
+          const dyA = (y - avoidCy) / avoidRy;
+          const d2A = dxA * dxA + dyA * dyA;
+          if (d2A < 1.44) {
+            const dA = Math.sqrt(d2A) + 0.001;
+            const pushAway = (1.2 - dA) * 2200;
+            ax += (dxA / dA) * pushAway;
+            ay += (dyA / dA) * pushAway;
+          }
+        }
+
         if (introClock >= 1) {
           if (x < 8) ax += (8 - x) * 30;
           else if (x > w - 8) ax -= (x - w + 8) * 30;

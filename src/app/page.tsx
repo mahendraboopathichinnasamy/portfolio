@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import About from '@/components/About';
@@ -13,6 +14,9 @@ import ResumeModal from '@/components/ResumeModal';
 import ContactModal from '@/components/ContactModal';
 import SwarmCursor from '@/components/SwarmCursor';
 import FloatingScrollController from '@/components/FloatingScrollController';
+
+// Load the 3-D companion client-side only (WebGL requires browser APIs)
+const PortfolioPet = dynamic(() => import('@/components/pet/PortfolioPet'), { ssr: false });
 
 export default function Home() {
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
@@ -77,6 +81,11 @@ export default function Home() {
           {/* Contact Section with Inline Info Cards & Dialog Launcher */}
           <ContactSection onOpenContactModal={handleOpenContact} />
         </main>
+
+        {/* 3-D Portfolio Companion – Stationed on the upper side of the Footer line above social links */}
+        <div className="relative w-full max-w-7xl mx-auto px-4 md:px-8 flex justify-start pl-4 sm:pl-6 z-40 pointer-events-none">
+          <PortfolioPet />
+        </div>
 
         {/* Footer with Circular Arrow */}
         <Footer />
