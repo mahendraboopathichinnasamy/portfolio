@@ -7,8 +7,6 @@ import {
   ArrowUpRight,
   ArrowRight,
   Layers,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { projectsData } from '@/config/portfolioData';
 import { Project } from '@/types/portfolio';
@@ -163,9 +161,10 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
   const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
+  const hasAutoScrolledDownRef = useRef(false);
 
-  // Duplicated list for seamless infinite loop
-  const displayProjects = [...projectsData, ...projectsData];
+  // 5 Featured Projects (Single non-looping list)
+  const displayProjects = projectsData;
 
   // Pause auto-scroll temporarily when user manually scrolls or drags
   const pauseTemporarily = useCallback(() => {
@@ -176,7 +175,7 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
     }, 4000);
   }, []);
 
-  // IntersectionObserver: only auto-scroll when section is in viewport
+  // IntersectionObserver: start auto-scroll when user arrives at projects section
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -184,15 +183,19 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsInView(entry.isIntersecting);
+        if (!entry.isIntersecting) {
+          // Reset so auto-scroll can re-run when user comes back
+          hasAutoScrolledDownRef.current = false;
+        }
       },
-      { threshold: 0.1 }
+      { threshold: 0.15 }
     );
 
     observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
-  // Elevated Continuous Infinite Auto-Scroll with requestAnimationFrame
+  // Smooth Auto-Scroll: Runs when user arrives, stops when projects are over, then scrolls down
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
@@ -201,7 +204,7 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
     if (!container) return;
 
     let isRunning = true;
-    const speed = 0.65; // ~39px/sec smooth continuous drift
+    const speed = 0.75; // ~45px/sec smooth continuous drift
 
     const step = (timestamp: number) => {
       if (!isRunning) return;
@@ -215,9 +218,24 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
           const pixelsToMove = speed * (delta / 16.67);
 
           if (container.scrollWidth > container.clientWidth) {
-            const halfWidth = container.scrollWidth / 2;
-            if (container.scrollLeft >= halfWidth) {
-              container.scrollLeft -= halfWidth;
+            const maxScroll = container.scrollWidth - container.clientWidth;
+
+            if (container.scrollLeft >= maxScroll - 2) {
+              // Projects completed! Stop the auto-scroll
+              container.scrollLeft = maxScroll;
+              isRunning = false;
+
+              // Automatically scroll the page down to the next section
+              if (!hasAutoScrolledDownRef.current) {
+                hasAutoScrolledDownRef.current = true;
+                setTimeout(() => {
+                  const nextSection = document.getElementById('education');
+                  if (nextSection) {
+                    nextSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 800);
+              }
+              return;
             } else {
               container.scrollLeft += pixelsToMove;
             }
@@ -239,7 +257,7 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
     };
   }, [isHovered, isUserInteracting, modalOpen, isGrabbing, isInView]);
 
-  // Smooth mouse wheel to horizontal scroll conversion with seamless wrap
+  // Smooth mouse wheel conversion: scrolls horizontally through projects, then scrolls down
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -248,16 +266,20 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
       pauseTemporarily();
 
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        const halfWidth = container.scrollWidth / 2;
-        container.scrollLeft += e.deltaY;
+        const maxScroll = container.scrollWidth - container.clientWidth;
 
-        // Wrap around seamlessly
-        if (container.scrollLeft >= halfWidth) {
-          container.scrollLeft -= halfWidth;
-        } else if (container.scrollLeft <= 0) {
-          container.scrollLeft += halfWidth;
+        // If projects are completed and user scrolls down, allow page to scroll down naturally
+        if (e.deltaY > 0 && container.scrollLeft >= maxScroll - 2) {
+          return;
         }
+
+        // If at start and user scrolls up, allow page to scroll up naturally
+        if (e.deltaY < 0 && container.scrollLeft <= 2) {
+          return;
+        }
+
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
       }
     };
 
@@ -287,50 +309,12 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
       hasMovedRef.current = true;
     }
     const container = scrollContainerRef.current;
-    const halfWidth = container.scrollWidth / 2;
     container.scrollLeft = scrollLeftRef.current - walk;
-
-    // Wrap around seamlessly while dragging
-    if (container.scrollLeft >= halfWidth) {
-      container.scrollLeft -= halfWidth;
-      scrollLeftRef.current -= halfWidth;
-    } else if (container.scrollLeft <= 0) {
-      container.scrollLeft += halfWidth;
-      scrollLeftRef.current += halfWidth;
-    }
   };
 
   const handleMouseUpOrLeave = () => {
     isDraggingRef.current = false;
     setIsGrabbing(false);
-  };
-
-  const scrollPrev = () => {
-    pauseTemporarily();
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const firstCard = container.querySelector('article') as HTMLElement | null;
-    const cardWidth = firstCard ? firstCard.offsetWidth + 24 : 440;
-    const halfWidth = container.scrollWidth / 2;
-
-    if (container.scrollLeft <= 25) {
-      container.scrollLeft += halfWidth;
-    }
-    container.scrollBy({ left: -cardWidth, behavior: 'smooth' });
-  };
-
-  const scrollNext = () => {
-    pauseTemporarily();
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    const firstCard = container.querySelector('article') as HTMLElement | null;
-    const cardWidth = firstCard ? firstCard.offsetWidth + 24 : 440;
-    const halfWidth = container.scrollWidth / 2;
-
-    if (container.scrollLeft >= halfWidth - 25) {
-      container.scrollLeft -= halfWidth;
-    }
-    container.scrollBy({ left: cardWidth, behavior: 'smooth' });
   };
 
   const openProjectDetails = (project: Project) => {
@@ -357,27 +341,8 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
           </h2>
         </div>
 
-        {/* Clean Controls: Subtle Prev/Next arrows & All Projects Badge */}
+        {/* Clean Controls: All Projects Badge */}
         <div className="flex items-center gap-2.5 self-start md:self-end">
-          <div className="flex items-center gap-1.5 bg-[#081826]/70 p-1 rounded-full border border-[#00E5FF]/20 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
-            <button
-              onClick={scrollPrev}
-              aria-label="Previous Project"
-              title="Previous Project"
-              className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-[#00E5FF] hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/10 transition-all cursor-pointer"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={scrollNext}
-              aria-label="Next Project"
-              title="Next Project"
-              className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-[#00E5FF] hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/10 transition-all cursor-pointer"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#03070E] bg-gradient-to-r from-[#00E5FF] to-[#22D3EE] shadow-[0_0_18px_rgba(0,229,255,0.4)]">
             <span>All Projects</span>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-[#03070E]/20 text-[#03070E]">
@@ -387,7 +352,7 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
         </div>
       </div>
 
-      {/* Horizontal Scrollable Elevated Projects Container with Seamless Infinite Drift */}
+      {/* Horizontal Scrollable Projects Container */}
       <div
         ref={scrollContainerRef}
         onMouseEnter={() => setIsHovered(true)}
@@ -405,7 +370,7 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
       >
         {displayProjects.map((project, index) => (
           <ProjectCard
-            key={`${project.id}-${index}`}
+            key={project.id}
             project={project}
             index={index}
             onOpenDetails={openProjectDetails}
@@ -417,7 +382,7 @@ export default function Projects({ onOpenContact }: ProjectsProps) {
       <div className="mt-3 px-1 flex items-center justify-between text-xs text-slate-400">
         <div className="flex items-center gap-2 font-mono text-[11px] text-slate-400">
           <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] animate-pulse shadow-[0_0_8px_#00E5FF]" />
-          <span>Interactive Project Showcase • Hover to pause • Drag or wheel to explore</span>
+
         </div>
         <div className="hidden sm:flex items-center gap-1.5 font-mono text-[11px] text-slate-400">
           <span className="text-[#00E5FF]">{projectsData.length}</span> Featured Applications

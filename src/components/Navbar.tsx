@@ -117,10 +117,10 @@ export default function Navbar({ onOpenContact }: NavbarProps) {
   };
 
   return (
-    <header className="fixed top-3 inset-x-0 z-50 flex flex-col items-center px-4 transition-all duration-300">
+    <header className="fixed top-3 inset-x-0 z-50 flex flex-col items-center px-4 md:px-8 transition-all duration-300">
       <nav
         aria-label="Main Navigation"
-        className={`w-full max-w-6xl transition-all duration-300 rounded-full px-4 sm:px-6 py-2.5 flex items-center justify-between border ${scrolled
+        className={`w-full max-w-7xl transition-all duration-300 rounded-full px-4 sm:px-6 py-2.5 flex flex-nowrap items-center justify-between border ${scrolled
           ? 'bg-[#050B14]/90 backdrop-blur-xl border-[#00E5FF]/30 shadow-[0_8px_32px_rgba(0,0,0,0.7),0_0_20px_rgba(0,229,255,0.14)]'
           : 'bg-[#081826]/70 backdrop-blur-md border-[#00E5FF]/20 shadow-[0_4px_24px_rgba(0,0,0,0.4)]'
           }`}
@@ -129,7 +129,7 @@ export default function Navbar({ onOpenContact }: NavbarProps) {
         <a
           href="#home"
           onClick={(e) => scrollToSection(e, '#home')}
-          className="relative w-10 h-10 rounded-full border border-[#00E5FF]/40 bg-gradient-to-br from-[#081826] via-[#050B14] to-[#03070E] flex items-center justify-center hover:scale-105 active:scale-95 hover:border-[#00E5FF] transition-all duration-300 shadow-[0_0_16px_rgba(0,229,255,0.25)] hover:shadow-[0_0_24px_rgba(0,229,255,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B14] select-none"
+          className="relative w-10 h-10 shrink-0 rounded-full border border-[#00E5FF]/40 bg-gradient-to-br from-[#081826] via-[#050B14] to-[#03070E] flex items-center justify-center hover:scale-105 active:scale-95 hover:border-[#00E5FF] transition-all duration-300 shadow-[0_0_16px_rgba(0,229,255,0.25)] hover:shadow-[0_0_24px_rgba(0,229,255,0.5)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050B14] select-none"
           aria-label="Mahendra Boopathi Portfolio Home"
         >
           <span className="font-black text-sm tracking-tight text-white select-none pl-0.5 leading-none">
@@ -140,7 +140,7 @@ export default function Navbar({ onOpenContact }: NavbarProps) {
         {/* Desktop Navigation Links with Animated Active Underline & Highlighted Let's Talk */}
         <div
           role="menubar"
-          className="hidden md:flex items-center gap-1 bg-[#050B14]/80 border border-[#00E5FF]/20 rounded-full px-3 py-1.5 shadow-inner backdrop-blur-md"
+          className="ml-auto hidden md:flex flex-nowrap shrink-0 items-center gap-1 whitespace-nowrap bg-[#050B14]/80 border border-[#00E5FF]/20 rounded-full px-3 py-1.5 shadow-inner backdrop-blur-md"
         >
           {navLinks.map((link) => {
             const isActive = activeSection === link.href.substring(1);
@@ -151,7 +151,7 @@ export default function Navbar({ onOpenContact }: NavbarProps) {
                 role="menuitem"
                 aria-current={isActive ? 'page' : undefined}
                 onClick={(e) => scrollToSection(e, link.href)}
-                className={`relative px-3.5 py-2 text-xs font-semibold transition-all duration-200 min-h-[38px] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] ${isActive
+                className={`relative shrink-0 whitespace-nowrap px-3.5 py-2 text-xs font-semibold transition-all duration-200 min-h-[38px] flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00E5FF] ${isActive
                   ? 'text-[#00E5FF] font-bold'
                   : 'text-slate-300 hover:text-white'
                   }`}
@@ -174,7 +174,7 @@ export default function Navbar({ onOpenContact }: NavbarProps) {
           {/* Cleanly Highlighted Let's Talk CTA inside nav pill */}
           <button
             onClick={onOpenContact}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-[#03070E] bg-gradient-to-r from-[#00E5FF] to-[#22D3EE] shadow-[0_0_15px_rgba(0,229,255,0.4)] hover:shadow-[0_0_25px_rgba(0,229,255,0.7)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer min-h-[38px] focus:outline-none focus:ring-2 focus:ring-[#00E5FF]"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold text-[#03070E] bg-gradient-to-r from-[#00E5FF] to-[#22D3EE] shadow-[0_0_15px_rgba(0,229,255,0.4)] hover:shadow-[0_0_25px_rgba(0,229,255,0.7)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer min-h-[38px] focus:outline-none focus:ring-2 focus:ring-[#00E5FF]"
           >
             <span>Let&apos;s Talk</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -195,7 +195,7 @@ export default function Navbar({ onOpenContact }: NavbarProps) {
       </nav>
 
       {/* Scroll Progress Bar Under Navbar */}
-      <div className="w-full max-w-5xl mt-1 h-[2px] bg-transparent overflow-hidden px-6">
+      <div className="w-full max-w-7xl mt-1 h-[2px] bg-transparent overflow-hidden px-6">
         <div
           className="h-full bg-gradient-to-r from-[#00E5FF] via-[#22D3EE] to-[#38BDF8] shadow-[0_0_10px_#00E5FF] transition-all duration-150 rounded-full"
           style={{ width: `${scrollProgress}%` }}

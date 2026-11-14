@@ -1,159 +1,237 @@
 'use client';
 
-/**
- * Character3D – 3D GLB Companion Model Loader & Controller
- *
- * Loads the 3D model from `/models/portfolio-boy.glb` using `@react-three/drei`:
- * - Renders volumetric 3D curved geometry with PBR normal mapping & roughness
- * - Real-time 3D cursor tracking (yaw, pitch, bank)
- * - Plays embedded GLB animations (idle, jump, wave) via useAnimations
- * - Dynamic ground contact shadow on footer line beneath sneakers
- * - Interactive cursor specular light creating moving gleams across the 3D surface
- */
-
-import React, { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF, useAnimations } from '@react-three/drei';
 import * as THREE from 'three';
-import type { AnimState } from './PetController';
 
 interface Character3DProps {
-  animState: AnimState;
-  mousePos: React.MutableRefObject<{ x: number; y: number }>;
+  reduceMotion: boolean;
+  waveSignal: number;
 }
 
-export default function Character3D({ animState, mousePos }: Character3DProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const shadowRef = useRef<THREE.Mesh>(null);
-  const cursorLightRef = useRef<THREE.PointLight>(null);
+/**
+ * Articulated, code-built 3D companion based on the supplied character:
+ * black hoodie, black trousers, white sneakers and a raised waving hand.
+ * Keeping the body parts separate gives the arm a real shoulder/wrist wave
+ * instead of rotating a flat image of the complete character.
+ */
+export default function Character3D({ reduceMotion, waveSignal }: Character3DProps) {
+  const characterRef = useRef<THREE.Group>(null);
+  const wavingArmRef = useRef<THREE.Group>(null);
+  const wavingForearmRef = useRef<THREE.Group>(null);
+  const restingArmRef = useRef<THREE.Group>(null);
+  const headRef = useRef<THREE.Group>(null);
+  const waveStartedAtRef = useRef(0);
+  const restartWaveRef = useRef(true);
 
-  // Load the generated 3D GLB model
-  const gltf = useGLTF('/models/portfolio-boy.glb');
-  const { actions, names } = useAnimations(gltf.animations, groupRef);
-
-  // Clone scene so multiple mounts never clash
-  const model = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
-
-  // Jump animation state tracking
-  const jumpTime = useRef(0);
-  const prevAnimState = useRef(animState);
-
-  // Manage embedded GLTF animations
   useEffect(() => {
-    if (!actions) return;
-
-    if (animState === 'wave' && actions['wave']) {
-      actions['wave'].reset().fadeIn(0.2).play();
-    } else if (actions['idle']) {
-      actions['idle'].reset().fadeIn(0.2).play();
-    }
-
-    return () => {
-      actions['wave']?.fadeOut(0.2);
-    };
-  }, [animState, actions]);
+    restartWaveRef.current = true;
+  }, [waveSignal]);
 
   useFrame((state, delta) => {
-    if (!groupRef.current) return;
+    const time = state.clock.getElapsedTime();
 
-    const t = state.clock.getElapsedTime();
-
-    // Trigger jump timer when animState switches to 'jump'
-    if (animState === 'jump' && prevAnimState.current !== 'jump') {
-      jumpTime.current = 0.001;
-      if (actions['jump']) {
-        actions['jump'].reset().setLoop(THREE.LoopOnce, 1).play();
-      }
-    }
-    prevAnimState.current = animState;
-
-    // Smooth real-time 3D cursor tracking (turns head and torso toward cursor)
-    const targetYaw = mousePos.current.x * 0.42; // Yaw (turn left / right)
-    const targetPitch = -mousePos.current.y * 0.2; // Pitch (look up / down)
-    const targetRoll = -mousePos.current.x * 0.05; // Bank / subtle tilt
-
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetYaw, 0.09);
-    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetPitch, 0.09);
-    groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetRoll, 0.09);
-
-    // Dynamic 3D specular light following cursor position
-    if (cursorLightRef.current) {
-      cursorLightRef.current.position.x = mousePos.current.x * 1.5;
-      cursorLightRef.current.position.y = -mousePos.current.y * 1.2 + 0.3;
+    if (restartWaveRef.current) {
+      waveStartedAtRef.current = time;
+      restartWaveRef.current = false;
     }
 
-    // Natural 3D idle breathing & micro-hover
-    const idleY = Math.sin(t * 2.8) * 0.025;
-    const breathScale = 1 + Math.sin(t * 2.8) * 0.015;
+    const triggeredWaveTime = time - waveStartedAtRef.current;
+    const isWaving = reduceMotion || triggeredWaveTime < 2.8 || time % 7 < 2.6;
+    const wave = reduceMotion ? 0 : Math.sin(time * 8.5);
 
-    let jumpOffsetY = 0;
-    let jumpScaleX = 1;
-    let jumpScaleY = 1;
-    let jumpRotZ = 0;
-
-    if (jumpTime.current > 0) {
-      jumpTime.current += delta * 2.6;
-      const progress = jumpTime.current;
-      if (progress < Math.PI) {
-        jumpOffsetY = Math.sin(progress) * 0.45; // Jump height
-        jumpScaleY = 1 + Math.sin(progress) * 0.14; // Squash & stretch
-        jumpScaleX = 1 - Math.sin(progress) * 0.08;
-        jumpRotZ = Math.sin(progress * 2) * 0.08;
-      } else {
-        jumpTime.current = 0;
-      }
+    if (characterRef.current) {
+      const targetYaw = reduceMotion ? 0 : state.pointer.x * 0.16;
+      characterRef.current.rotation.y = THREE.MathUtils.damp(
+        characterRef.current.rotation.y,
+        targetYaw,
+        7,
+        delta,
+      );
+      characterRef.current.position.y = reduceMotion ? -0.05 : -0.05 + Math.sin(time * 2.2) * 0.025;
     }
 
-    // Playful sway when celebrating or waving
-    let swayZ = 0;
-    if (animState === 'wave' || animState === 'celebrate') {
-      swayZ = Math.sin(t * 5.2) * 0.05;
+    if (wavingArmRef.current) {
+      const targetRotation = isWaving ? 2.55 + wave * 0.13 : -0.08;
+      wavingArmRef.current.rotation.z = THREE.MathUtils.damp(
+        wavingArmRef.current.rotation.z,
+        targetRotation,
+        9,
+        delta,
+      );
     }
 
-    groupRef.current.position.y = -0.05 + idleY + jumpOffsetY;
-    groupRef.current.scale.set(jumpScaleX, jumpScaleY * breathScale, 1);
-    groupRef.current.rotation.z = targetRoll + swayZ + jumpRotZ;
+    if (wavingForearmRef.current) {
+      wavingForearmRef.current.rotation.z = isWaving ? -0.4 + wave * 0.28 : 0.04;
+    }
 
-    // Dynamic ground contact shadow (shrinks and fades as character jumps)
-    if (shadowRef.current) {
-      const shadowScale = Math.max(0.3, 1 - jumpOffsetY * 1.6);
-      shadowRef.current.scale.set(shadowScale, shadowScale, 1);
-      const shadowMat = shadowRef.current.material as THREE.MeshBasicMaterial;
-      if (shadowMat) {
-        shadowMat.opacity = Math.max(0.1, 0.42 - jumpOffsetY * 0.65);
-      }
+    if (restingArmRef.current) {
+      restingArmRef.current.rotation.z = reduceMotion ? 0.08 : 0.08 + Math.sin(time * 2.2) * 0.035;
+    }
+
+    if (headRef.current) {
+      headRef.current.rotation.z = reduceMotion ? -0.03 : -0.03 + Math.sin(time * 1.8) * 0.025;
     }
   });
 
   return (
-    <>
-      {/* Interactive cursor specular light that creates moving gleams across the 3D surface */}
-      <pointLight
-        ref={cursorLightRef}
-        position={[0.5, 0.8, 1.6]}
-        intensity={2.2}
-        color="#E2F1FF"
-        distance={4.5}
-      />
+    <group ref={characterRef} position={[0, -0.05, 0]} rotation={[0, -0.08, 0]}>
+      {/* Legs and trousers */}
+      <group position={[0, -0.82, 0]}>
+        <mesh position={[-0.23, -0.35, 0]} castShadow>
+          <capsuleGeometry args={[0.17, 0.66, 6, 14]} />
+          <meshStandardMaterial color="#11151d" roughness={0.9} />
+        </mesh>
+        <mesh position={[0.23, -0.35, 0]} castShadow>
+          <capsuleGeometry args={[0.17, 0.66, 6, 14]} />
+          <meshStandardMaterial color="#11151d" roughness={0.9} />
+        </mesh>
 
-      {/* 3D Cyan Ground Contact Shadow & Underglow on footer line */}
-      <mesh ref={shadowRef} position={[0, -0.96, -0.02]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0, 0.36, 32]} />
-        <meshBasicMaterial
-          color="#00E5FF"
-          transparent
-          opacity={0.42}
-          side={THREE.DoubleSide}
-        />
+        {/* White high-top sneakers */}
+        <group position={[-0.24, -0.88, 0.08]}>
+          <mesh position={[0, 0, 0.08]} castShadow>
+            <boxGeometry args={[0.38, 0.22, 0.62]} />
+            <meshStandardMaterial color="#eef3f7" roughness={0.65} />
+          </mesh>
+          <mesh position={[0, -0.12, 0.09]}>
+            <boxGeometry args={[0.42, 0.08, 0.66]} />
+            <meshStandardMaterial color="#202735" roughness={0.75} />
+          </mesh>
+          <mesh position={[0, 0.02, 0.4]}>
+            <boxGeometry args={[0.24, 0.05, 0.03]} />
+            <meshStandardMaterial color="#e35b66" />
+          </mesh>
+        </group>
+        <group position={[0.24, -0.88, 0.08]}>
+          <mesh position={[0, 0, 0.08]} castShadow>
+            <boxGeometry args={[0.38, 0.22, 0.62]} />
+            <meshStandardMaterial color="#eef3f7" roughness={0.65} />
+          </mesh>
+          <mesh position={[0, -0.12, 0.09]}>
+            <boxGeometry args={[0.42, 0.08, 0.66]} />
+            <meshStandardMaterial color="#202735" roughness={0.75} />
+          </mesh>
+          <mesh position={[0, 0.02, 0.4]}>
+            <boxGeometry args={[0.24, 0.05, 0.03]} />
+            <meshStandardMaterial color="#e35b66" />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Hoodie body */}
+      <mesh position={[0, 0.05, 0]} castShadow>
+        <capsuleGeometry args={[0.5, 0.58, 8, 20]} />
+        <meshStandardMaterial color="#151922" roughness={0.82} metalness={0.04} />
+      </mesh>
+      <mesh position={[0, 0.58, -0.03]}>
+        <torusGeometry args={[0.37, 0.11, 10, 28]} />
+        <meshStandardMaterial color="#1c212c" roughness={0.88} />
+      </mesh>
+      <mesh position={[0, -0.18, 0.49]}>
+        <boxGeometry args={[0.52, 0.25, 0.05]} />
+        <meshStandardMaterial color="#202632" roughness={0.8} />
+      </mesh>
+      <mesh position={[-0.1, 0.28, 0.49]}>
+        <cylinderGeometry args={[0.014, 0.014, 0.39, 8]} />
+        <meshStandardMaterial color="#cbd5e1" />
+      </mesh>
+      <mesh position={[0.1, 0.28, 0.49]}>
+        <cylinderGeometry args={[0.014, 0.014, 0.39, 8]} />
+        <meshStandardMaterial color="#cbd5e1" />
       </mesh>
 
-      {/* 3D Model Group loaded from portfolio-boy.glb */}
-      <group ref={groupRef} position={[0, -0.05, 0]}>
-        <primitive object={model} />
+      {/* Resting arm */}
+      <group ref={restingArmRef} position={[-0.52, 0.43, 0]} rotation={[0, 0, 0.08]}>
+        <mesh position={[0, -0.34, 0]} castShadow>
+          <capsuleGeometry args={[0.15, 0.44, 6, 14]} />
+          <meshStandardMaterial color="#171b24" roughness={0.88} />
+        </mesh>
+        <mesh position={[0, -0.77, 0.01]} castShadow>
+          <sphereGeometry args={[0.16, 16, 12]} />
+          <meshStandardMaterial color="#bd744f" roughness={0.78} />
+        </mesh>
       </group>
-    </>
+
+      {/* Articulated waving arm: shoulder and forearm animate independently */}
+      <group ref={wavingArmRef} position={[0.52, 0.43, 0]} rotation={[0, 0, 2.55]}>
+        <mesh position={[0, -0.27, 0]} castShadow>
+          <capsuleGeometry args={[0.15, 0.3, 6, 14]} />
+          <meshStandardMaterial color="#171b24" roughness={0.88} />
+        </mesh>
+        <group ref={wavingForearmRef} position={[0, -0.54, 0]} rotation={[0, 0, -0.4]}>
+          <mesh position={[0, -0.18, 0]} castShadow>
+            <capsuleGeometry args={[0.14, 0.24, 6, 14]} />
+            <meshStandardMaterial color="#171b24" roughness={0.88} />
+          </mesh>
+          <mesh position={[0, -0.48, 0.01]} castShadow>
+            <sphereGeometry args={[0.17, 16, 12]} />
+            <meshStandardMaterial color="#bd744f" roughness={0.78} />
+          </mesh>
+        </group>
+      </group>
+
+      {/* Neck and head */}
+      <mesh position={[0, 0.82, 0]} castShadow>
+        <cylinderGeometry args={[0.16, 0.18, 0.28, 16]} />
+        <meshStandardMaterial color="#b96e4a" roughness={0.8} />
+      </mesh>
+      <group ref={headRef} position={[0, 1.25, 0]} rotation={[0, 0, -0.03]}>
+        <mesh castShadow scale={[0.9, 1.06, 0.86]}>
+          <sphereGeometry args={[0.46, 24, 20]} />
+          <meshStandardMaterial color="#c47a53" roughness={0.78} />
+        </mesh>
+        <mesh position={[-0.43, -0.01, 0]} scale={[0.7, 1, 0.55]}>
+          <sphereGeometry args={[0.13, 14, 10]} />
+          <meshStandardMaterial color="#b96e4a" roughness={0.8} />
+        </mesh>
+        <mesh position={[0.43, -0.01, 0]} scale={[0.7, 1, 0.55]}>
+          <sphereGeometry args={[0.13, 14, 10]} />
+          <meshStandardMaterial color="#b96e4a" roughness={0.8} />
+        </mesh>
+
+        {/* Eyes, brows, nose and smile */}
+        <mesh position={[-0.16, 0.06, 0.4]}>
+          <sphereGeometry args={[0.052, 12, 10]} />
+          <meshStandardMaterial color="#1a1110" roughness={0.35} />
+        </mesh>
+        <mesh position={[0.16, 0.06, 0.4]}>
+          <sphereGeometry args={[0.052, 12, 10]} />
+          <meshStandardMaterial color="#1a1110" roughness={0.35} />
+        </mesh>
+        <mesh position={[-0.16, 0.15, 0.4]} rotation={[0, 0, -0.15]}>
+          <boxGeometry args={[0.16, 0.025, 0.025]} />
+          <meshStandardMaterial color="#3b211b" />
+        </mesh>
+        <mesh position={[0.16, 0.15, 0.4]} rotation={[0, 0, 0.15]}>
+          <boxGeometry args={[0.16, 0.025, 0.025]} />
+          <meshStandardMaterial color="#3b211b" />
+        </mesh>
+        <mesh position={[0, -0.05, 0.43]} scale={[0.55, 0.8, 0.5]}>
+          <sphereGeometry args={[0.075, 12, 10]} />
+          <meshStandardMaterial color="#a95f43" roughness={0.85} />
+        </mesh>
+        <mesh position={[0, -0.2, 0.42]} rotation={[0, 0, Math.PI / 2]}>
+          <torusGeometry args={[0.09, 0.014, 8, 18, Math.PI]} />
+          <meshStandardMaterial color="#5b2b27" />
+        </mesh>
+
+        {/* Layered wavy hair */}
+        <mesh position={[0, 0.26, -0.02]} scale={[1.03, 0.55, 1]} castShadow>
+          <sphereGeometry args={[0.46, 20, 16]} />
+          <meshStandardMaterial color="#3d241d" roughness={0.92} />
+        </mesh>
+        {[-0.32, -0.12, 0.1, 0.3].map((x, index) => (
+          <mesh
+            key={x}
+            position={[x, 0.43 + (index % 2) * 0.04, 0.02]}
+            rotation={[0.18, 0, x * -0.75]}
+            castShadow
+          >
+            <coneGeometry args={[0.17, 0.32, 12]} />
+            <meshStandardMaterial color={index % 2 ? '#563127' : '#43271f'} roughness={0.9} />
+          </mesh>
+        ))}
+      </group>
+    </group>
   );
 }
-
-// Preload the GLB model for instant loading
-useGLTF.preload('/models/portfolio-boy.glb');

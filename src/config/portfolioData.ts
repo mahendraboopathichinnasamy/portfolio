@@ -12,7 +12,7 @@ export const profileData: Profile = {
   name: 'Mahendra Boopathi.C',
   titles: [
     'Junior Application Developer',
-    'Flutter & Ionic Mobile Developer',
+    'Flutter Mobile Developer',
     'Full Stack Web Developer',
     'Python Programmer & Data Analyst',
   ],
@@ -39,7 +39,7 @@ export const heroStats: StatItem[] = [
   },
   {
     id: 'projects',
-    value: '12+',
+    value: '2+',
     label: 'App & Web Implementations',
     sublabel: 'Mobile, Full Stack & Python',
     icon: 'Layers',
@@ -64,14 +64,14 @@ export const socialLinks: SocialLink[] = [
   {
     id: 'github',
     platform: 'GitHub',
-    url: 'https://github.com',
+    url: 'https://github.com/mahendraboopathichinnasamy',
     icon: 'Github',
     ariaLabel: 'Visit GitHub Profile of Mahendra Boopathi',
   },
   {
     id: 'linkedin',
     platform: 'LinkedIn',
-    url: 'https://linkedin.com',
+    url: 'www.linkedin.com/in/magendra-boopathi',
     icon: 'Linkedin',
     ariaLabel: 'Connect on LinkedIn with Mahendra Boopathi',
   },

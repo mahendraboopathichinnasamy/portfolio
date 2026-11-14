@@ -1,36 +1,52 @@
 'use client';
 
-/**
- * PortfolioPet – Static Companion Character
- *
- * Renders the original high-resolution transparent cartoon character PNG
- * stationed directly on the upper side of the footer border line above
- * the social links.
- *
- * - Perfectly stationary (0 unwanted layout shifts, 0 movement)
- * - Razor-sharp native resolution
- * - Subtle ground underglow resting his sneakers on the line
- * - Z-index layered above swarm cursor particles
- */
-
-import React from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import './pet.css';
 
 export default function PortfolioPet() {
+  const [greetingSignal, setGreetingSignal] = useState(0);
+  const [showGreeting, setShowGreeting] = useState(true);
+
+  useEffect(() => {
+    if (!showGreeting) return;
+    const greetingTimer = window.setTimeout(() => setShowGreeting(false), 3000);
+    return () => window.clearTimeout(greetingTimer);
+  }, [showGreeting, greetingSignal]);
+
+  const greet = () => {
+    setGreetingSignal((current) => current + 1);
+    setShowGreeting(true);
+  };
+
   return (
-    <div className="pet-root" aria-label="Portfolio companion">
-      <div className="pet-character-wrap" data-pet="true">
+    <div className="pet-root">
+      <div className="pet-walk-track">
+      <div className="pet-walker">
+      <button
+        type="button"
+        className="pet-character-wrap"
+        aria-label="Portfolio companion. Click to say hi."
+        onClick={greet}
+      >
+        <span className={`pet-greeting ${showGreeting ? 'pet-greeting-visible' : ''}`} aria-hidden="true">
+          Hi!
+        </span>
+
+        <span className="pet-facing">
         <Image
           src="/images/companion-character.png"
-          alt="Portfolio Companion"
-          width={90}
-          height={135}
-          priority
+          alt="Companion with curly brown hair, black hoodie and cargo trousers, and black-and-white sneakers"
+          width={682}
+          height={1024}
+          sizes="(max-width: 640px) 112px, 132px"
           className="pet-character-img"
         />
-        {/* Subtle ground contact shadow / underglow on footer line */}
-        <div className="pet-ground-glow" />
+        </span>
+
+        <span className="pet-ground-glow" aria-hidden="true" />
+      </button>
+      </div>
       </div>
     </div>
   );

@@ -1,64 +1,159 @@
 /* ─────────────────────────────────────────────────
-   Portfolio Companion – Static Character Styling
+   Original artwork portfolio companion
    ───────────────────────────────────────────────── */
 
 .pet-root {
+  --pet-width: 132px;
+  --walk-duration: 32s;
+  width: 100%;
   position: relative;
+  z-index: 40;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   pointer-events: none;
   user-select: none;
-  z-index: 40;
 }
 
-/* ── Character Wrapper (Stationary, Crisp) ── */
+.pet-walk-track {
+  width: max(0px, calc(100% - var(--pet-width)));
+}
+
+.pet-walker {
+  width: 100%;
+  animation: pet-travel var(--walk-duration) linear infinite;
+}
+
+.pet-facing {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: pet-turn var(--walk-duration) steps(1, end) infinite;
+}
+
+.pet-root:has(.pet-character-wrap:hover) *,
+.pet-root:has(.pet-character-wrap:focus-visible) * {
+  animation-play-state: paused;
+}
+
+@keyframes pet-travel {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(100%); }
+}
+
+@keyframes pet-turn {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(-1); }
+}
+
+@keyframes pet-step {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  25%, 75% { transform: translateY(-4px) rotate(0deg); }
+  50% { transform: translateY(0) rotate(1deg); }
+}
+
 .pet-character-wrap {
   position: relative;
-  width: 90px;
-  height: 135px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
+  width: 132px;
+  height: 180px;
+  display: block;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
   pointer-events: auto;
-  /* Stationary: no transitions or animations */
+  touch-action: manipulation;
 }
 
-/* ── Character PNG (High-DPI Razor-Sharp) ── */
+.pet-character-wrap:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 3px;
+  border-radius: 18px;
+}
+
 .pet-character-img {
-  width: 90px;
-  height: 135px;
+  animation: pet-step 640ms ease-in-out infinite;
+  transform-origin: bottom center;
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   object-position: bottom center;
-  display: block;
-  user-select: none;
-  -webkit-user-drag: none;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
+  filter: drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 }
 
-/* ── Ground Contact Glow on Footer Border Line ── */
-.pet-ground-glow {
+.pet-greeting {
   position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 68px;
-  height: 6px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(0, 229, 255, 0.4) 0%, rgba(0, 229, 255, 0) 75%);
+  z-index: 4;
+  top: 8px;
+  right: -8px;
+  min-width: 42px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  border-radius: 14px 14px 14px 4px;
+  background: rgba(5, 11, 20, 0.94);
+  color: #eafcff;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.24);
+  opacity: 0;
+  transform: translateY(5px) scale(0.85);
+  transform-origin: bottom left;
+  transition: opacity 180ms ease, transform 180ms ease;
   pointer-events: none;
 }
 
-/* ── Responsive Mobile Sizing ── */
+.pet-greeting-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.pet-ground-glow {
+  position: absolute;
+  z-index: 1;
+  bottom: -2px;
+  left: 50%;
+  width: 88px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 229, 255, 0.55) 0%, rgba(0, 229, 255, 0) 74%);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 @media (max-width: 640px) {
-  .pet-character-wrap,
-  .pet-character-img {
-    width: 75px;
-    height: 112px;
+  .pet-root {
+    --pet-width: 112px;
+    --walk-duration: 18s;
   }
+  .pet-character-wrap {
+    width: 112px !important;
+    height: 154px !important;
+  }
+
+  .pet-greeting {
+    top: 4px;
+    right: -2px;
+  }
+
   .pet-ground-glow {
-    width: 56px;
-    height: 5px;
+    width: 72px;
+    height: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-walker,
+  .pet-facing,
+  .pet-character-img {
+    animation: none;
+  }
+  .pet-greeting {
+    transition: none;
   }
 }

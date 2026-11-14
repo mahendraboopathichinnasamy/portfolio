@@ -32,7 +32,7 @@ export default function Home() {
       <div className="fixed inset-0 w-full h-full min-h-[100dvh] pointer-events-none z-30 overflow-hidden">
         <SwarmCursor
           count={800}
-          size={2.6}
+          size={2.0}
           spread={90}
           swirl={0.6}
           clickEffect="burst"
